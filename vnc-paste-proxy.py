@@ -4,7 +4,8 @@
     VNC viewer -> 127.0.0.1:VNC_PORT (this proxy, WSL) -> wayvnc (container)
 
 Started by foxden.sh. VNC only carries text in its clipboard, so
-images take this path instead.
+images take this path instead. Without powershell.exe (native Linux)
+the proxy only forwards VNC.
 
 The proxy reads the client -> server half of the RFB stream. When it sees a
 Ctrl+V key press from the viewer, it holds that key event back, asks a

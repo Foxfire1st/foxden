@@ -77,7 +77,7 @@ Docker containers share the host's Linux kernel. The
 isolation doesn't protect against every possible container
 escape or kernel vulnerability.
 
-**GPU (optional)**
+**GPU (optional, WSL2 only)**
 
 With the GPU turned on, the container gets the device
 `/dev/dxg` and the WSL libraries under `/usr/lib/wsl`
@@ -107,8 +107,8 @@ Signing in to harnesses and IDEs in the container:
 - Signing in to the account of your harness or IDE is fine.
   The session is stored in the agent home and readable by
   the agent.
-- Open sign-in links in the Windows browser, not in the
-  container's Chromium (see rule 4 and
+- Open sign-in links in your normal browser outside the
+  container, not in the container's Chromium (see rule 4 and
   [Layers](08-layers.md)).
 - When asked about the keyring ("OS keyring"), choose the
   weaker encryption. A keyring in the container would run
@@ -119,7 +119,7 @@ Signing in to harnesses and IDEs in the container:
 
 **2. Don't attach the host IDE to the agent container**
 
-Don't connect the host IDE (Cursor or VS Code on Windows)
+Don't connect the host IDE (e.g. Cursor or VS Code)
 to the agent container through Dev Containers or "Attach
 to Running Container".
 
@@ -181,7 +181,7 @@ Treat a signed-in browser session like a key:
   resources, or do without browser access for the agent.
 - Sign-in links from programs in the container, such as
   an IDE, open in the container's Chromium. Don't
-  sign in there; copy the link and open it in the Windows
+  sign in there; copy the link and open it in your normal
   browser.
 - Bind debug ports of project containers only to
   `127.0.0.1`. Ports published on `0.0.0.0` are reachable
@@ -223,14 +223,14 @@ starting the application.
 
 **6. Use the clipboard over VNC deliberately**
 
-VNC viewers sync the clipboard between Windows and the
-container while they're connected:
+VNC viewers sync the clipboard between your desktop and
+the container while they're connected:
 
-- Windows → container: everything copied on Windows lands
-  in the container right away, including passwords or
+- Desktop → container: everything copied on your desktop
+  lands in the container right away, including passwords or
   tokens. The agent could read it there.
-- Container → Windows: whatever is copied in the container
-  lands in the Windows clipboard. Check content before
+- Container → desktop: whatever is copied in the container
+  lands in your desktop's clipboard. Check content before
   pasting it, for example into a terminal.
 
 Recommended TigerVNC settings (Options, "Input"):
@@ -238,13 +238,13 @@ Recommended TigerVNC settings (Options, "Input"):
 - "Send clipboard to server" off. Only turn it on briefly
   when you want to paste something into the container.
 - "Accept clipboard from server" on. That way you can still
-  copy links from the container to Windows.
+  copy links from the container to your desktop.
 
 Alternatively, disconnect the VNC viewer before copying
-something sensitive on Windows. The agent doesn't need the
+something sensitive on your desktop. The agent doesn't need the
 VNC connection.
 
-VNC doesn't carry images. For that, `vnc-paste-proxy.py`
+VNC doesn't carry images. On WSL2, `vnc-paste-proxy.py`
 sits on the host between the VNC viewer and wayvnc
 ([Graphical desktop](06-desktop.md)):
 

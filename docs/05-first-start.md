@@ -98,7 +98,7 @@ The harness runs inside the agent container.
 ## Sign in
 
 Run the harness's login in the container shell and open
-the link it shows in the Windows browser. Details per
+the link it shows in your normal browser. Details per
 harness: [Layers](08-layers.md), "Signing in".
 
 The agent home is a separate volume per shared directory.

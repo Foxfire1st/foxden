@@ -31,7 +31,7 @@ Host variables passed into the container, one name per line:
 Build without cache (fresh downloads):
   FOXDEN_REBUILD=1 ./foxden.sh /path/to/repo --desktop
 
-GPU for programs in the container (WSL):
+GPU for programs in the container (WSL2 only):
   echo NVIDIA > ~/.config/foxden/gpu   # on, NVIDIA GPU
   : > ~/.config/foxden/gpu             # on, default GPU
   rm ~/.config/foxden/gpu              # off
@@ -52,7 +52,7 @@ if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
 fi
 
 if (( $(id -u) == 0 )); then
-  echo "ERROR: Run as your normal WSL user, not root." >&2
+  echo "ERROR: Run as your normal user, not root." >&2
   exit 2
 fi
 
@@ -413,7 +413,7 @@ check_clean() {
 }
 
 # ------------------------------------------------------------
-# VNC proxy (image paste from Windows)
+# VNC proxy (image paste from the Windows clipboard on WSL2)
 # ------------------------------------------------------------
 # VNC carries only text in its clipboard. vnc-paste-proxy.py runs
 # on the host between the viewer and wayvnc: on Ctrl+V from the

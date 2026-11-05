@@ -19,7 +19,7 @@ Areas covered:
   submodules), add a remote, push, credentials.
 - **Permissions:** remount `.git`, `sudo`, capabilities.
 - **Files:** masked `.env` files, `/logs`, `/AGENTS.md`.
-- **Host:** Windows files, Docker socket, sandbox
+- **Host:** Windows files (WSL2), Docker socket, sandbox
   configuration in the workspace.
 - **Agent:** how a harness behaves when asked to commit,
   with and without `/AGENTS.md`.

@@ -14,7 +14,7 @@
 | `… with newline cannot be …` | A path contains a newline. |
 | `… gpu exists, but WSL GPU support is missing.` | GPU turned on, but `/dev/dxg` or `/usr/lib/wsl/lib` is missing on the host. |
 | `Invalid GPU adapter name …` | The file `~/.config/foxden/gpu` contains invalid characters. |
-| `python3 is required for the VNC proxy.` | python3 is missing in WSL. |
+| `python3 is required for the VNC proxy.` | python3 is missing on the host. |
 | `VNC proxy failed to start.` | The VNC port is taken, for example by a second sandbox. Choose a different `VNC_PORT`. |
 | `Cannot find the published wayvnc port.` | The container isn't running. |
 | `Layer without Dockerfile: …` | A line in `~/.config/foxden/layers` isn't a directory with a `Dockerfile`. |
@@ -44,7 +44,7 @@ The proxy log (`--desktop-logs`) shows every Ctrl+V:
 |---|---|
 | `pushed … KB PNG` | The image is in the container. If the program doesn't paste it, it doesn't accept images. |
 | `no image-only clipboard` | The clipboard holds no image, or text as well. |
-| `powershell.exe unavailable` | WSL interop is turned off. |
+| `powershell.exe unavailable` | On WSL2: WSL interop is turned off. On native Linux: expected, image paste isn't available there yet. |
 | `security type …`, `unknown message type …` | The viewer uses encryption or an unknown extension. Images aren't pasted then. |
 | no entry | The viewer isn't connected through the proxy (wrong port). |
 
@@ -118,8 +118,8 @@ from `docker compose ls`.
 
 ## Wrong file permissions
 
-The Compose configuration uses the UID and GID of the WSL
-user.
+The Compose configuration uses the UID and GID of your
+host user.
 
 Check:
 

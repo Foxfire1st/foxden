@@ -6,8 +6,7 @@
 
 The shared directory is mounted writable at `/workspace`.
 
-Changes in the container show up immediately on the WSL
-host.
+Changes in the container show up immediately on the host.
 
 ## Git metadata
 
@@ -82,7 +81,7 @@ It can hold, among other things:
 
 There is one volume per shared directory.
 
-This directory is not the home directory of the WSL host
+This directory is not the home directory of the host
 user.
 
 ## Container logs
@@ -124,8 +123,8 @@ Commands:
 | Container | `/logs/<project>.log` |
 
 `follow` returns right away. The background processes keep
-running after the terminal is closed and end when WSL or
-Windows restarts. Run `follow` again after that.
+running after the terminal is closed and end when the host
+restarts (on WSL2 also when WSL shuts down). Run `follow` again after that.
 
 - `follow` skips projects that are already followed.
 - The foreground mode aborts if the project is already
@@ -211,6 +210,6 @@ Don't mount:
 
 - The whole host home.
 - The host root filesystem.
-- Windows user directories.
+- Windows user directories (`/mnt/c/…` on WSL2).
 - Host SSH agent sockets.
 - `/var/run/docker.sock`.

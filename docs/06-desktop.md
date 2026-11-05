@@ -8,8 +8,8 @@ display server in the container: it provides the virtual
 screen, manages the windows and gives wayvnc the picture
 as well as mouse and keyboard.
 
-Sway renders in software, because WSL doesn't provide a
-DRM device. Programs like Chromium or an IDE can
+Sway renders in software, so it needs no GPU (WSL2
+doesn't provide a DRM device anyway). Programs like Chromium or an IDE can
 optionally use the GPU ([GPU](09-gpu.md)).
 
 The desktop has:
@@ -33,7 +33,7 @@ Files block the bar while the program they started is
 open. A second click on "Start" then opens no menu, and the
 taskbar doesn't update. Workaround: start programs with Alt+Enter, Alt+D or from
 the terminal (see
-[Possible extensions](16-possible-extensions.md)).
+[Roadmap](16-roadmap.md)).
 
 ## Start programs from the console
 
@@ -46,18 +46,18 @@ clicking in the VNC viewer:
 ```
 
 The window appears on the desktop in the container, so in
-the VNC viewer, not as its own window on Windows. The
+the VNC viewer, not as its own window on your desktop. The
 console is free again right away.
 
-Separate windows directly on Windows aren't possible with
+Separate windows directly on your desktop aren't possible with
 VNC; VNC always shows the whole screen. Alt+F switches a
 program to full screen, or you can put it on its own
 workspace.
 
 ## Keyboard shortcuts
 
-The modifier is Alt, because VNC viewers on Windows usually
-keep the Windows key for themselves.
+The modifier is Alt, because VNC viewers usually keep the
+Windows/Super key for themselves.
 
 | Keys | Action |
 |---|---|
@@ -75,7 +75,7 @@ keep the Windows key for themselves.
 | Alt+R | Resize (arrows, then Enter) |
 | Alt+Shift+C | Reload configuration |
 
-Windows intercepts Alt+Tab and Alt+F4.
+Your desktop usually intercepts Alt+Tab and Alt+F4.
 
 In the taskbar, a click brings a window to the front and a
 middle click closes it.
@@ -134,7 +134,7 @@ starting point.
 
 ## VNC connection
 
-Open a VNC viewer on Windows.
+Open a VNC viewer on your desktop.
 
 Address:
 
@@ -142,8 +142,9 @@ Address:
 localhost:5900
 ```
 
-If Windows doesn't forward the WSL2 port automatically,
-check local reachability separately.
+On WSL2, Windows forwards `localhost` ports to WSL by
+default. If it doesn't, check local reachability
+separately.
 
 For a different local port:
 
@@ -170,6 +171,10 @@ authentication configured.
 The VNC port must not be exposed publicly.
 
 ## Pasting images
+
+Only on WSL2 for now. On native Linux the proxy just
+forwards VNC; image paste is on the
+[Roadmap](16-roadmap.md).
 
 You can paste an image from the Windows clipboard, such as
 a snip taken with Win+Shift+S, into the VNC window with

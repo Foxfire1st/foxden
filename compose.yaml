@@ -1,7 +1,7 @@
 
 # ============================================================
 # foxden: sandbox for coding agents
-# Docker Engine + Compose inside WSL
+# Docker Engine + Compose on Linux, native or in WSL2
 # One container, normal internet access, no proxy
 # ============================================================
 

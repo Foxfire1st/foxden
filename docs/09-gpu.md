@@ -2,6 +2,9 @@
 
 # GPU
 
+WSL2 only. On native Linux the GPU isn't supported yet
+([Roadmap](16-roadmap.md)).
+
 Programs in the container can optionally use the GPU of the
 Windows host. WSL provides it as `/dev/dxg`, and Mesa
 translates OpenGL to DirectX 12 with the `d3d12` driver.

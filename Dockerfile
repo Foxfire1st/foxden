@@ -97,7 +97,7 @@ RUN npm install --global @playwright/mcp@latest
 
 # ------------------------------------------------------------
 # Non-root agent user
-# Match WSL host UID/GID for workspace file permissions
+# Match the host user's UID/GID for workspace file permissions
 # ------------------------------------------------------------
 RUN groupadd --gid "$HOST_GID" node \
     && useradd \

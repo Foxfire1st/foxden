@@ -1,7 +1,8 @@
 # foxden
 
-An isolated workspace for coding agents on Docker Engine
-and WSL2. The agent works in a Linux container with a
+An isolated workspace for coding agents on Linux with
+Docker Engine, natively (e.g. Ubuntu) or in WSL2 on
+Windows. The agent works in a Linux container with a
 desktop, browser and normal internet access. It can change
 project files but can't commit or push.
 
@@ -13,8 +14,9 @@ Prototype for local development.
 
 ## Prerequisites
 
-- Windows with WSL2 and Docker Engine (without Docker Desktop)
-- a VNC viewer on Windows, e.g. TigerVNC
+- Linux with Docker Engine (without Docker Desktop): native,
+  e.g. Ubuntu, or WSL2 on Windows
+- a VNC viewer, e.g. TigerVNC
 - a Git repository or a folder with several repositories
 
 Details: [Prerequisites](docs/03-prerequisites.md)
@@ -37,8 +39,8 @@ $S ~/projects/my-repo --desktop
 ```
 
 Connect the VNC viewer to `localhost:5900`. The desktop has
-a bar with a start menu at the top. You can paste images
-from the Windows clipboard there with Ctrl+V.
+a bar with a start menu at the top. On WSL2 you can paste
+images from the Windows clipboard there with Ctrl+V.
 
 Add your harness as a layer, for example the Cursor CLI
 (more examples in [Layers](docs/08-layers.md)):
@@ -57,7 +59,8 @@ echo ~/.config/foxden/my-tools > ~/.config/foxden/layers
 ```
 
 The next start builds the layer. Sign in once and open the
-link it shows in the Windows browser:
+link it shows in your normal browser outside the container
+(on WSL2: the Windows browser):
 
 ```bash
 $S ~/projects/my-repo env NO_OPEN_BROWSER=1 agent login
@@ -98,7 +101,7 @@ host.
 3. Review the agent's changes before the host runs them:
    Git hooks, `compose.yaml`, build scripts.
 4. Only test accounts in the container's browser, no SSO.
-   Open sign-in links in the Windows browser.
+   Open sign-in links in your normal browser.
 5. End sessions with `--stop` and review the changes it
    reports.
 6. Turn off "Send clipboard to server" in TigerVNC.
@@ -124,7 +127,7 @@ Reasons: [Security model](docs/02-security-model.md)
 13. [Managing containers](docs/13-managing-containers.md)
 14. [Tests](docs/14-tests.md)
 15. [Troubleshooting](docs/15-troubleshooting.md)
-16. [Possible extensions](docs/16-possible-extensions.md)
+16. [Roadmap](docs/16-roadmap.md)
 17. [Further reading](docs/17-further-reading.md)
 
 Test reports: [test-reports/](test-reports/)

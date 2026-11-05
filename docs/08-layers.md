@@ -51,7 +51,7 @@ FOXDEN_REBUILD=1 ./foxden.sh ~/projects/my-repo --desktop
   home is a volume that Docker fills from the image only
   when it's first created. Anything added to `/home/node`
   later stays hidden behind an existing volume.
-- **End with `USER node`.** The container runs as your WSL
+- **End with `USER node`.** The container runs as your host
   user anyway, but builds of later layers expect it.
 - Tools installed as root can't update themselves. Update
   them with `FOXDEN_REBUILD=1`.
@@ -99,7 +99,8 @@ A layer directory may contain a `ports` file with
 ```
 
 The launcher always publishes these ports on `127.0.0.1`.
-From Windows, open `http://localhost:8787`.
+Open `http://localhost:8787` in your normal browser (on
+WSL2 from Windows).
 
 Layers can't add mounts, devices or other Compose settings.
 A Compose file could mount any host path or the Docker
@@ -150,13 +151,14 @@ the technical barriers.
 ## Signing in
 
 Open a shell (`./foxden.sh ~/projects/my-repo`) and run the
-harness's login. Open the link it shows in the Windows
-browser, not in the container's Chromium.
+harness's login. Open the link it shows in your normal
+browser outside the container, not in the container's
+Chromium.
 
 - Logins that show a code to paste back, or that wait for
   the sign-in on the server, work this way.
 - Logins that redirect the browser to a `localhost` port in
-  the container can't complete from Windows. Use the
+  the container can't complete from outside. Use the
   harness's device code login or an API key instead.
 
 Sign-ins are stored in the agent home of the shared folder
@@ -182,7 +184,7 @@ USER node
 
 Start with `./foxden.sh ~/projects/my-repo agent`. Sign in
 with `./foxden.sh ~/projects/my-repo env NO_OPEN_BROWSER=1 agent login`
-and open the URL in the Windows browser. Alternatively list
+and open the URL in your normal browser. Alternatively list
 `CURSOR_API_KEY` in `~/.config/foxden/env`.
 
 ### Cursor IDE
@@ -231,8 +233,8 @@ Sign in:
 1. Click "Log In" in the IDE. Chromium opens in the
    container with the sign-in page. Don't sign in there.
 2. Copy the link from the address bar (Ctrl+L, Ctrl+C).
-   The VNC viewer transfers it to the Windows clipboard.
-3. Open the link in the Windows browser and sign in there.
+   The VNC viewer transfers it to your desktop's clipboard.
+3. Open the link in your normal browser and sign in there.
    After a few seconds the IDE in the container is signed
    in.
 4. Close the Chromium tab in the container.
@@ -259,7 +261,7 @@ USER node
 ```
 
 Start with `./foxden.sh ~/projects/my-repo claude`. To sign
-in, open the link it shows in the Windows browser and paste
+in, open the link it shows in your normal browser and paste
 the code back. Alternatively list `ANTHROPIC_API_KEY` in
 `~/.config/foxden/env`.
 
@@ -282,7 +284,7 @@ USER node
 
 Start with `./foxden.sh ~/projects/my-repo codex`. Codex's
 browser login redirects to a `localhost` port in the
-container and doesn't complete from Windows. Use
+container and doesn't complete from outside. Use
 `codex login --device-auth` (device code login must be
 allowed in your ChatGPT security settings) or list
 `OPENAI_API_KEY` in `~/.config/foxden/env`.

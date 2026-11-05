@@ -46,7 +46,7 @@ acceleration ([GPU](09-gpu.md)).
 Programs in the container open links through `xdg-open`
 in the container's Chromium, including sign-ins of IDEs.
 Don't sign in there: copy the link and open it in
-the Windows browser ([Security model](02-security-model.md),
+your normal browser ([Security model](02-security-model.md),
 rule 4).
 
 ## Screenshots
@@ -67,7 +67,7 @@ project directory on the host.
 Playwright MCP is installed in the Docker image.
 
 To use it, add it to your harness's MCP configuration (see
-[Possible extensions](16-possible-extensions.md)).
+[Roadmap](16-roadmap.md)).
 
 Planned uses include:
 
