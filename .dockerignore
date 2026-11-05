@@ -1,0 +1,41 @@
+
+# Git metadata
+.git
+.gitignore
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.ssh/
+
+# Archives and logs
+*.zip
+*.tar
+*.tar.gz
+*.log
+
+# Development artifacts
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+build/
+.cache/
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

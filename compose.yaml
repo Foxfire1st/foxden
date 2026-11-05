@@ -1,0 +1,102 @@
+
+# ============================================================
+# foxden: sandbox for coding agents
+# Docker Engine + Compose inside WSL
+# One container, normal internet access, no proxy
+# ============================================================
+
+services:
+  agent:
+    # Built by foxden.sh: the base image from this folder plus
+    # the layers listed in ~/.config/foxden/layers.
+    image: ${FOXDEN_IMAGE:?Set FOXDEN_IMAGE}
+    pull_policy: never
+
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /workspace
+
+    # --------------------------------------------------------
+    # Container runtime
+    # --------------------------------------------------------
+    init: true
+    tty: true
+    stdin_open: true
+
+    # --------------------------------------------------------
+    # Security
+    # --------------------------------------------------------
+    cap_drop:
+      - ALL
+
+    security_opt:
+      - no-new-privileges:true
+
+    pids_limit: 512
+
+    # --------------------------------------------------------
+    # Chromium / Wayland shared memory
+    # --------------------------------------------------------
+    shm_size: "1gb"
+
+    # --------------------------------------------------------
+    # Environment
+    # --------------------------------------------------------
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      GIT_OPTIONAL_LOCKS: "0"
+
+      XDG_SESSION_TYPE: wayland
+      XDG_CURRENT_DESKTOP: sway
+
+    # --------------------------------------------------------
+    # Filesystem
+    # --------------------------------------------------------
+    volumes:
+
+      # Approved project directory (read/write)
+      # Git metadata of every repository in it is mounted read-only
+      # by foxden.sh (generated mounts file).
+      - type: bind
+        source: ${PROJECT_DIR:?Set PROJECT_DIR}
+        target: /workspace
+        bind:
+          create_host_path: false
+
+      # Container logs written by foxden-logs.sh (read-only)
+      - type: bind
+        source: ${AGENT_LOG_DIR:?Set AGENT_LOG_DIR}
+        target: /logs
+        read_only: true
+        bind:
+          create_host_path: false
+
+      # Persistent private agent home
+      - type: volume
+        source: agent_home
+        target: /home/node
+
+    # --------------------------------------------------------
+    # VNC desktop access
+    # --------------------------------------------------------
+    # wayvnc gets a random port on the host's loopback address.
+    # Viewers connect to vnc-paste-proxy.py on VNC_PORT, which
+    # foxden.sh starts in front of it. Ports of layers are added
+    # by foxden.sh (generated mounts file), also on 127.0.0.1.
+    ports:
+      - "127.0.0.1::5900"
+
+    # --------------------------------------------------------
+    # Networking
+    # --------------------------------------------------------
+    # Default Docker bridge network:
+    # unrestricted outbound internet, no proxy.
+
+    # Desktop startup is configured in foxden.sh
+    command: ["sleep", "infinity"]
+
+# ============================================================
+# Persistent volumes
+# ============================================================
+volumes:
+  agent_home:

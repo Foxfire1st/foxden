@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Start menu; item ids map to menu-actions in waybar.jsonc -->
+<interface>
+  <object class="GtkMenu" id="menu">
+    <child>
+      <object class="GtkMenuItem" id="terminal">
+        <property name="label">Terminal</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="browser">
+        <property name="label">Chromium</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="files">
+        <property name="label">Files</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separator"/>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="apps">
+        <property name="label">All programs …</property>
+      </object>
+    </child>
+  </object>
+</interface>
