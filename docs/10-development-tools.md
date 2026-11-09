@@ -5,7 +5,7 @@
 The image contains, among other things:
 
 - Python 3.15.2 and pip.
-- Node.js 26, npm and npx.
+- Node.js 26, npm 12 and npx.
 - Git.
 - curl.
 - jq.
