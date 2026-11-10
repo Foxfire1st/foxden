@@ -5,7 +5,7 @@
 | Component | Implementation |
 |---|---|
 | Operating system | Debian 13 Trixie |
-| Python | 3.15.2 |
+| Python | 3.15.x |
 | Node.js | 26.x |
 | Coding agents, IDEs, services | your own layers on top of the base image ([Layers](08-layers.md)) |
 | Desktop | Sway (Wayland) with Waybar and a start menu |
@@ -34,7 +34,7 @@ Host: Linux, native (e.g. Ubuntu) or WSL2 on Windows
 │
 └── Docker container
     ├── Debian Trixie
-    ├── Python 3.15.2
+    ├── Python 3.15
     ├── Node.js 26
     ├── your layers: harnesses, IDEs, services
     ├── Sway desktop, Waybar, Chromium

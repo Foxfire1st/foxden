@@ -1,4 +1,3 @@
-
 # syntax=docker/dockerfile:1
 
 # ============================================================
@@ -7,9 +6,9 @@
 FROM node:26-trixie-slim AS node_runtime
 
 # ============================================================
-# Stage 2: Python 3.15.2 + Debian 13 Trixie
+# Stage 2: Python 3.15 + Debian 13 Trixie
 # ============================================================
-FROM python:3.15.2-slim-trixie
+FROM python:3.15-slim-trixie
 
 ARG HOST_UID=1000
 ARG HOST_GID=1000
@@ -33,6 +32,7 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js \
 
 # ------------------------------------------------------------
 # Development tools + Sway desktop + Chromium
+# libatomic1 and libstdc++6: runtime libraries for Node
 # ------------------------------------------------------------
 RUN set -eux; \
     apt-get update; \
@@ -45,6 +45,7 @@ RUN set -eux; \
       ripgrep \
       build-essential \
       libatomic1 \
+      libstdc++6 \
       unzip \
       procps \
       less \
@@ -84,7 +85,8 @@ RUN printf '%s\n' \
 # ------------------------------------------------------------
 # npm 12 (the Node image still bundles npm 11)
 # ------------------------------------------------------------
-RUN npm install --global npm@12
+RUN npm install --global npm@12 \
+    && rm -rf /root/.npm
 
 # ------------------------------------------------------------
 # Verify language runtimes
@@ -98,13 +100,16 @@ RUN python --version \
 # ------------------------------------------------------------
 # Browser automation: Playwright MCP
 # ------------------------------------------------------------
-RUN npm install --global @playwright/mcp@latest
+RUN npm install --global @playwright/mcp@latest \
+    && rm -rf /root/.npm
 
 # ------------------------------------------------------------
 # Non-root agent user
-# Match the host user's UID/GID for workspace file permissions
+# Match the host user's UID/GID for workspace file permissions.
+# --non-unique: the host GID may already exist in the image
+# (e.g. 100 = users).
 # ------------------------------------------------------------
-RUN groupadd --gid "$HOST_GID" node \
+RUN groupadd --non-unique --gid "$HOST_GID" node \
     && useradd \
       --uid "$HOST_UID" \
       --gid node \

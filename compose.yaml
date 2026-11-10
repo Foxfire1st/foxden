@@ -31,7 +31,9 @@ services:
     security_opt:
       - no-new-privileges:true
 
-    pids_limit: 512
+    # Counts threads, not only processes. An IDE alone uses
+    # several hundred.
+    pids_limit: 4096
 
     # --------------------------------------------------------
     # Chromium / Wayland shared memory
