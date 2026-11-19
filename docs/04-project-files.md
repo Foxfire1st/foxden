@@ -12,9 +12,14 @@ foxden/
 ├── vnc-paste-proxy.py
 ├── desktop/
 │   ├── sway.conf
-│   ├── waybar.jsonc
-│   ├── waybar.css
-│   └── start-menu.xml
+│   ├── sfwbar.config
+│   ├── bar.sh
+│   ├── desktops.sh
+│   ├── shortcuts.sh
+│   ├── shortcuts.txt
+│   ├── fuzzel.ini
+│   ├── xfce4-terminal.xml
+│   └── chromium-lock.sh
 ├── docs/
 ├── test-reports/
 │   └── 00-template.md

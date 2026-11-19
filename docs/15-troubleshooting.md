@@ -50,20 +50,14 @@ The proxy log (`--desktop-logs`) shows every Ctrl+V:
 
 ## Bar or start menu missing
 
-Check in the container whether Waybar is running:
+Check in the container whether sfwbar is running:
 
 ```bash
-pgrep -a waybar
+pgrep -a sfwbar
 ```
 
-Errors in `desktop/waybar.jsonc` or `desktop/waybar.css`
-show up in the desktop logs.
-
-If the start menu stops responding after a terminal,
-Chromium or the file manager was started from the menu:
-that's the known issue from
-[Graphical desktop](06-desktop.md). Close the program, or
-start programs with Alt+Enter or Alt+D.
+Errors in `desktop/sfwbar.config` show up in the desktop
+logs.
 
 ## IDE shows a white window
 

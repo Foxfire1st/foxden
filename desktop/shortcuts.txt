@@ -1,0 +1,18 @@
+Alt+Enter                  Terminal
+Alt+D                      Program search
+Alt+Shift+Q                Close window
+Alt+1 … 9                  Switch desktop
+Alt+Shift+1 … 9            Move window to desktop
+Alt+arrows                 Move focus
+Alt+Shift+arrows           Move window
+Alt+F                      Full screen
+Alt+W / Alt+S / Alt+E      Windows tabbed / stacked / split
+Alt+B / Alt+V              Next window to the right / below
+Alt+Shift+Space            Floating window
+Alt+R                      Resize (arrows, then Enter)
+Alt+Shift+C                Reload configuration
+Alt+F1                     Show and hide this overview
+Ctrl+Shift+T               Terminal: new tab
+Ctrl+PgUp / PgDn           Terminal: switch tab
+Ctrl+Shift+W               Terminal: close tab
+Ctrl+Shift+C / V           Terminal: copy / paste

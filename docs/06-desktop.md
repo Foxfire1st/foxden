@@ -14,26 +14,47 @@ optionally use the GPU ([GPU](09-gpu.md)).
 
 The desktop has:
 
-- A bar at the top (Waybar) with a start menu, a taskbar
-  of open windows, workspaces, CPU, RAM and a clock.
+- A bar at the top (sfwbar) with a start menu, a taskbar
+  of the current desktop, desktops, CPU, RAM, a clock and
+  an overview of the keyboard shortcuts.
 - A start menu with Terminal, Chromium, Files and
   "All programs …" (program search, also lists IDEs from
   your layers).
 - A plain dark background.
 - Notifications (mako).
 
-Programs: `foot` (terminal), `fuzzel` (program search),
-`thunar` (file manager), Chromium, plus whatever your
-layers install.
+Programs: `xfce4-terminal` (terminal with tabs), `fuzzel`
+(program search), `thunar` (file manager), Chromium, plus
+whatever your layers install. `foot` stays installed as a
+lean terminal without tabs.
 
 The clock shows UTC, because the container runs in UTC.
 
-**Known issue:** the menu entries Terminal, Chromium and
-Files block the bar while the program they started is
-open. A second click on "Start" then opens no menu, and the
-taskbar doesn't update. Workaround: start programs with Alt+Enter, Alt+D or from
-the terminal (see
-[Roadmap](16-roadmap.md)).
+## Terminal
+
+Ctrl+Shift+T opens a new tab, and so does the "File" menu.
+With several tabs open, the terminal asks before it closes
+the window.
+
+Colors, font and scrollback length are preset in
+`desktop/xfce4-terminal.xml`. Changes made in the
+terminal's settings dialog are stored in the home volume
+and take precedence.
+
+## Desktops
+
+A desktop is a Sway workspace. The bar shows the open
+desktops as numbers; a click switches to one. The taskbar
+only shows the windows of the current desktop.
+
+- "+" opens a new desktop with the lowest free number.
+- "×" closes the current desktop. Its windows move to the
+  neighbouring one; no program is closed. The last desktop
+  stays.
+
+A desktop stays open until you close it with "×", even
+when it is empty. Alt+1 … 9 opens a desktop too. There are
+at most nine.
 
 ## Start programs from the console
 
@@ -41,7 +62,7 @@ You can open programs on the desktop from the host without
 clicking in the VNC viewer:
 
 ```bash
-./foxden.sh ~/projects/my-repo swaymsg exec foot
+./foxden.sh ~/projects/my-repo swaymsg exec xfce4-terminal
 ./foxden.sh ~/projects/my-repo swaymsg exec "chromium https://example.com"
 ```
 
@@ -52,20 +73,25 @@ console is free again right away.
 Separate windows directly on your desktop aren't possible with
 VNC; VNC always shows the whole screen. Alt+F switches a
 program to full screen, or you can put it on its own
-workspace.
+desktop.
 
 ## Keyboard shortcuts
 
 The modifier is Alt, because VNC viewers usually keep the
 Windows/Super key for themselves.
 
+"⌨ Keys" at the right of the bar or Alt+F1 shows this
+overview above all windows. Alt+F1 also works in full
+screen. Esc, a second click on "⌨ Keys", a click outside
+the overview or Alt+F1 again closes it, typing filters.
+
 | Keys | Action |
 |---|---|
 | Alt+Enter | Terminal |
 | Alt+D | Program search |
 | Alt+Shift+Q | Close window |
-| Alt+1 … 9 | Switch workspace |
-| Alt+Shift+1 … 9 | Move window to workspace |
+| Alt+1 … 9 | Switch desktop |
+| Alt+Shift+1 … 9 | Move window to desktop |
 | Alt+arrows, Alt+H/J/K/L | Move focus |
 | Alt+Shift+arrows | Move window |
 | Alt+F | Full screen |
@@ -74,11 +100,23 @@ Windows/Super key for themselves.
 | Alt+Shift+Space | Floating window |
 | Alt+R | Resize (arrows, then Enter) |
 | Alt+Shift+C | Reload configuration |
+| Alt+F1 | Shortcut overview |
+| Ctrl+Shift+T | Terminal: new tab |
+| Ctrl+PgUp / PgDn | Terminal: switch tab |
+| Ctrl+Shift+W | Terminal: close tab |
+| Ctrl+Shift+C / V | Terminal: copy / paste |
 
 Your desktop usually intercepts Alt+Tab and Alt+F4.
 
 In the taskbar, a click brings a window to the front and a
 middle click closes it.
+
+Window titles in the taskbar are up to 30 characters long.
+When room gets tight, the bar shortens them, with very many
+windows down to the icon.
+
+When the screen size changes, for example because the VNC
+viewer's window is resized, the bar briefly restarts.
 
 ## Customize the desktop
 
@@ -88,14 +126,24 @@ image at `/etc/foxden/`:
 | File | Content |
 |---|---|
 | `sway.conf` | Shortcuts, look, autostart |
-| `waybar.jsonc` | Layout of the bar |
-| `waybar.css` | Colors of the bar |
-| `start-menu.xml` | Start menu entries |
+| `sfwbar.config` | Layout and colors of the bar, start menu entries |
+| `bar.sh` | Starts the bar, and again when the screen size changes, and keeps track of the open desktops |
+| `desktops.sh` | The "+" and "×" desktop buttons |
+| `shortcuts.txt` | Entries of the shortcut overview |
+| `shortcuts.sh` | Shows the overview |
+| `fuzzel.ini` | Colors of the program search and the overview |
+| `xfce4-terminal.xml` | Terminal defaults |
+| `chromium-lock.sh` | Removes a previous container's profile lock when Chromium starts |
 
-New start menu entry: a `GtkMenuItem` in `start-menu.xml`
-and a matching command under `menu-actions` in
-`waybar.jsonc`. The entry's `id` is the key in
-`menu-actions`.
+New start menu entry: an `item` in the `menu "start"`
+block in `sfwbar.config`. Put the command in
+`SwayCmd("exec …")`, then Sway starts the program the way
+a keyboard shortcut does.
+
+Debian has no package for sfwbar. The `Dockerfile` builds
+the version set there from source.
+
+When you change a shortcut, update `shortcuts.txt` too.
 
 Changes are built into the image the next time the launcher
 runs. That recreates the container. Reconnect the VNC
@@ -164,6 +212,9 @@ which the launcher starts on the host. The proxy only
 listens on the loopback address and forwards to wayvnc.
 wayvnc itself is published on a random port, also only on
 the loopback address.
+
+wayvnc sends up to 60 pictures per second (`--max-fps=60`
+in the launcher; wayvnc's default is 30).
 
 **Important:** wayvnc currently has no extra
 authentication configured.

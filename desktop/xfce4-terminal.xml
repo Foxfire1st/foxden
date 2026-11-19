@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Terminal defaults, colours matching the bar. In the image:
+     /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-terminal.xml
+     Changes made in the terminal's settings dialog are stored in
+     the home volume and win.
+     shortcuts-no-mnemonics: Alt+letter goes to the shell instead
+     of opening a menu. -->
+<channel name="xfce4-terminal" version="1.0">
+  <property name="font-use-system" type="bool" value="false"/>
+  <property name="font-name" type="string" value="DejaVu Sans Mono 11"/>
+  <property name="color-foreground" type="string" value="#c0caf5"/>
+  <property name="color-background" type="string" value="#1a1b26"/>
+  <property name="color-palette" type="string" value="#15161e;#f7768e;#9ece6a;#e0af68;#7aa2f7;#bb9af7;#7dcfff;#a9b1d6;#414868;#f7768e;#9ece6a;#e0af68;#7aa2f7;#bb9af7;#7dcfff;#c0caf5"/>
+  <property name="scrolling-lines" type="uint" value="10000"/>
+  <property name="shortcuts-no-mnemonics" type="bool" value="true"/>
+</channel>

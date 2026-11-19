@@ -13,8 +13,8 @@ The image contains, among other things:
 - Build and compiler tools.
 - Chromium.
 - Playwright MCP.
-- Sway, Waybar, swaybg and mako.
-- foot, fuzzel and Thunar.
+- Sway, sfwbar (built from source), swaybg and mako.
+- xfce4-terminal, foot, fuzzel and Thunar.
 - wayvnc.
 - grim and wlrctl.
 - mesa-utils (`eglinfo`, `glxinfo`) to check the GPU.

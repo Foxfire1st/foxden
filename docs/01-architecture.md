@@ -8,7 +8,7 @@
 | Python | 3.15.x |
 | Node.js | 26.x |
 | Coding agents, IDEs, services | your own layers on top of the base image ([Layers](08-layers.md)) |
-| Desktop | Sway (Wayland) with Waybar and a start menu |
+| Desktop | Sway (Wayland) with sfwbar and a start menu |
 | VNC server | wayvnc |
 | VNC proxy | `vnc-paste-proxy.py` on the host, pastes images with Ctrl+V |
 | Browser | Chromium |
@@ -37,7 +37,7 @@ Host: Linux, native (e.g. Ubuntu) or WSL2 on Windows
     ├── Python 3.15
     ├── Node.js 26
     ├── your layers: harnesses, IDEs, services
-    ├── Sway desktop, Waybar, Chromium
+    ├── Sway desktop, sfwbar, Chromium
     ├── Playwright MCP
     ├── wayvnc
     ├── /AGENTS.md (rules for the agent, RO)

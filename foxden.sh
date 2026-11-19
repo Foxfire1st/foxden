@@ -664,11 +664,12 @@ chmod 600 "$runtime/desktop.env"
 # ------------------------------------------------------------
 # Start VNC server
 # ------------------------------------------------------------
+# Without --max-fps wayvnc sends at most 30 pictures per second.
 if ! pgrep -u "$(id -u)" -x wayvnc >/dev/null; then
   nohup env \
     WAYLAND_DISPLAY="$wayland" \
     XDG_RUNTIME_DIR="$runtime" \
-    wayvnc 0.0.0.0 5900 \
+    wayvnc --max-fps=60 0.0.0.0 5900 \
     >"$runtime/wayvnc.log" 2>&1 </dev/null &
 fi
 

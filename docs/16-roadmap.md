@@ -14,8 +14,6 @@
 ## Desktop and tools
 
 - Document Playwright MCP setups for common harnesses.
-- Start menu: start Terminal, Chromium and Files through
-  `swaymsg exec` so they don't block the bar.
 - Don't open links from the container (`xdg-open`) directly
   in the container browser; show them for copying instead.
 - Start the Cursor IDE example with `--password-store=basic`

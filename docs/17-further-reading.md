@@ -22,8 +22,8 @@
   https://github.com/microsoft/wslg/wiki/GPU-selection-in-WSLg
 - Sway:
   https://github.com/swaywm/sway
-- Waybar:
-  https://github.com/Alexays/Waybar
+- sfwbar:
+  https://github.com/LBCrion/sfwbar
 - wayvnc:
   https://github.com/any1/wayvnc
 - Playwright MCP:
