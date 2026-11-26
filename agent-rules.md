@@ -1,6 +1,7 @@
 # foxden sandbox
 
 You are working in a Docker container. The project is at `/workspace`.
+Additional shared folders or files are at `/inputs` (read-only by default).
 
 ## Git
 

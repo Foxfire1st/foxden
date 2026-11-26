@@ -87,6 +87,7 @@ instead of the repository, e.g. `$S ~/projects/my-product`.
 | End a session | `$S ~/projects/my-repo --stop`, reports uncommitted changes |
 | Remove the container | `$S ~/projects/my-repo --down` |
 | Logs of local Docker stacks | `foxden-logs.sh follow`, see [Container logs](docs/11-filesystem-and-persistence.md#container-logs) |
+| Extra folders/files | `~/.config/foxden/mounts` or `$S --mount ~/docs ~/projects/my-repo`, see [Share more host files](docs/11-filesystem-and-persistence.md#share-more-host-files) |
 | Turn on the GPU | `echo NVIDIA > ~/.config/foxden/gpu`, see [GPU](docs/09-gpu.md) |
 
 You review, commit and push the agent's changes on the

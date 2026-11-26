@@ -186,6 +186,7 @@ these files:
 | `~/.local/state/foxden/logs/` | exported container logs |
 | `~/.local/state/foxden/followers/` | PID files of the log processes |
 | `~/.config/foxden/log-projects.txt` | list of Compose projects to follow |
+| `~/.config/foxden/mounts` | default extra host folders/files mounted under `/inputs` |
 | `~/.config/foxden/gpu` | turns on the GPU, content selects the GPU ([GPU](09-gpu.md)) |
 | `~/.config/foxden/layers` | your layer directories, built in order ([Layers](08-layers.md)) |
 | `~/.config/foxden/env` | names of host variables passed into the container |
@@ -193,23 +194,49 @@ these files:
 
 ## Share more host files
 
-You can mount specific extra files through `compose.yaml`:
+You can mount extra folders or individual files at `/inputs/<name>`
+(read-only by default) in two ways:
 
-```yaml
-- type: bind
-  source: /home/user/specs/requirements.md
-  target: /inputs/requirements.md
-  read_only: true
-  bind:
-    create_host_path: false
+1. **By default across projects** in `~/.config/foxden/mounts`
+   (one spec per line, `#` starts a comment, `~/` is allowed):
+
+```text
+~/docs/specs                    # -> /inputs/specs (ro)
+~/docs/specs:dema-specs         # -> /inputs/dema-specs (ro, custom name)
+~/docs/notes:rw                 # -> /inputs/notes (rw)
+~/docs/notes:my-notes:rw        # -> /inputs/my-notes (rw, custom name)
 ```
+
+2. **One-off or per-project** with `--mount` before the project path
+   (repeatable):
+
+```bash
+./foxden.sh --mount ~/docs/specs ~/projects/my-repo
+./foxden.sh --mount ~/docs/specs --mount ~/notes:my-notes:rw ~/projects/my-repo agent
+```
+
+Format: `HOST[:NAME][:ro|rw]` (defaults to `ro` and the basename of
+the host path as `NAME`).
+
+Safeguards:
+
+- The config file stays outside `/workspace`, so the agent can't add
+  more host paths.
+- Targets always live under `/inputs/<name>`, preventing collisions
+  with `/workspace`, `/AGENTS.md`, or system directories.
+- Untracked `.env` files inside extra folders are masked just like in
+  `/workspace`. For `:rw` folders, any `.git` directories inside them
+  are mounted read-only.
+- If the mount list changes (for example, re-running the launcher
+  without a `--mount` flag used earlier), Docker Compose recreates the
+  container and running agent sessions end.
 
 Only share files and directories that are actually needed.
 
-Don't mount:
+The launcher refuses protected host paths, including:
 
-- The whole host home.
-- The host root filesystem.
-- Windows user directories (`/mnt/c/…` on WSL2).
-- Host SSH agent sockets.
-- `/var/run/docker.sock`.
+- `/` and the whole host home (`~`),
+- system directories (`/etc`, `/var`, `/usr`, `/dev`, `/proc`, `/sys`, `/run`, `/root`),
+- `/mnt`, `/mnt/c`, `/mnt/c/Users`, and `/mnt/c/Windows`,
+- common credential directories (`~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.azure`, `~/.kube`, `~/.docker`),
+- `/var/run/docker.sock`, plus sandbox config/state, layer directories, and paths overlapping `/workspace`.

@@ -6,13 +6,17 @@ set -euo pipefail
 usage() {
   cat <<'HELP'
 Usage:
-  ./foxden.sh /path/to/repo                    shell in the container
-  ./foxden.sh /path/to/folder-with-repos       several repositories
-  ./foxden.sh /path/to/repo <command>          e.g. claude, codex, agent
+  ./foxden.sh [--mount SPEC]... /path/to/repo                    shell in the container
+  ./foxden.sh [--mount SPEC]... /path/to/folder-with-repos       several repositories
+  ./foxden.sh /path/to/repo <command>                            e.g. claude, codex, agent
   ./foxden.sh /path/to/repo --desktop
   ./foxden.sh /path/to/repo --desktop-logs
   ./foxden.sh /path/to/repo --stop
   ./foxden.sh /path/to/repo --down
+
+Extra folders/files mounted at /inputs/<name> (read-only by default):
+  --mount HOST[:NAME][:ro|rw]      one-off mount (repeatable, before project path)
+  ~/.config/foxden/mounts          default mounts, one spec per line
 
 Desktop defaults:
   Resolution: 1920x1080
@@ -41,14 +45,49 @@ HELP
 # ------------------------------------------------------------
 # Preconditions
 # ------------------------------------------------------------
+CLI_MOUNTS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --mount)
+      if [[ $# -lt 2 || -z "$2" ]]; then
+        echo "ERROR: --mount requires an argument (HOST[:NAME][:ro|rw])." >&2
+        exit 2
+      fi
+      CLI_MOUNTS+=("$2")
+      shift 2
+      ;;
+    --mount=*)
+      value=${1#--mount=}
+      if [[ -z "$value" ]]; then
+        echo "ERROR: --mount requires an argument (HOST[:NAME][:ro|rw])." >&2
+        exit 2
+      fi
+      CLI_MOUNTS+=("$value")
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "ERROR: Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
 if [[ $# -eq 0 ]]; then
   usage
   exit 2
-fi
-
-if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
-  usage
-  exit 0
 fi
 
 if (( $(id -u) == 0 )); then
@@ -206,6 +245,7 @@ fi
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/foxden"
 LAYERS_FILE="$CONFIG_DIR/layers"
 ENV_FILE="$CONFIG_DIR/env"
+MOUNTS_FILE="$CONFIG_DIR/mounts"
 
 # Prints the non-empty lines of a list file without comments
 # and surrounding blanks.
@@ -298,6 +338,185 @@ REPO_HASH=$(
 export COMPOSE_PROJECT_NAME="foxden_${REPO_HASH}"
 
 # ------------------------------------------------------------
+# Extra mounts (/inputs/<name>)
+# ------------------------------------------------------------
+paths_overlap() {
+  [[ "$1" == "$2" || "$1" == "$2/"* || "$2" == "$1/"* ]]
+}
+
+HOME_REAL=$(realpath -m -- "$HOME")
+CONFIG_DIR_REAL=$(realpath -m -- "$CONFIG_DIR")
+STATE_DIR_REAL=$(realpath -m -- "$STATE_DIR")
+
+EXTRA_MOUNT_SRCS=()
+EXTRA_MOUNT_NAMES=()
+EXTRA_MOUNT_MODES=()
+EXTRA_RO_GIT_SRCS=()
+EXTRA_RO_GIT_TARGETS=()
+declare -A SEEN_MOUNT_NAMES=()
+
+add_extra_mount() {
+  local spec=$1
+  local origin=$2
+  local -a parts=()
+  local host='' name='' mode='ro' host_real=''
+
+  if [[ $spec == *$'\n'* ]]; then
+    echo "ERROR: Mount specification with newline is not allowed ($origin)." >&2
+    exit 2
+  fi
+
+  IFS=':' read -r -a parts <<<"${spec}:"
+
+  case ${#parts[@]} in
+    1)
+      host=${parts[0]}
+      ;;
+    2)
+      host=${parts[0]}
+      if [[ -z "${parts[1]}" ]]; then
+        echo "ERROR: Invalid extra mount '$spec' ($origin): empty suffix after ':'." >&2
+        exit 2
+      elif [[ "${parts[1]}" == "ro" || "${parts[1]}" == "rw" ]]; then
+        mode=${parts[1]}
+      else
+        name=${parts[1]}
+      fi
+      ;;
+    3)
+      host=${parts[0]}
+      name=${parts[1]}
+      mode=${parts[2]}
+      if [[ "$mode" != "ro" && "$mode" != "rw" ]]; then
+        echo "ERROR: Invalid mount mode '$mode' in '$spec' ($origin): use ro or rw." >&2
+        exit 2
+      fi
+      ;;
+    *)
+      echo "ERROR: Invalid extra mount '$spec' ($origin): use HOST[:NAME][:ro|rw]." >&2
+      exit 2
+      ;;
+  esac
+
+  if [[ -z "$host" ]]; then
+    echo "ERROR: Missing host path in extra mount '$spec' ($origin)." >&2
+    exit 2
+  fi
+
+  if [[ "$host" == "~" ]]; then
+    host="$HOME"
+  elif [[ "$host" == "~/"* ]]; then
+    host="$HOME/${host#\~/}"
+  fi
+
+  if ! host_real=$(realpath -e -- "$host" 2>/dev/null); then
+    echo "ERROR: Extra mount path not found: $host ($origin)" >&2
+    exit 2
+  fi
+
+  if [[ $host_real == *$'\n'* ]]; then
+    echo "ERROR: Extra mount path with newline cannot be mounted: $host_real ($origin)" >&2
+    exit 2
+  fi
+
+  if [[ ! -d "$host_real" && ! -f "$host_real" ]]; then
+    echo "ERROR: Extra mount must be a regular file or directory: $host_real ($origin)" >&2
+    exit 2
+  fi
+
+  # Block system roots, home, sandbox config/state, credential dirs, layers, and workspace overlap.
+  case "$host_real" in
+    /|"$HOME_REAL"|/mnt|/mnt/c|/mnt/c/Users|/mnt/c/Windows|/mnt/c/Windows/*|\
+    /etc|/etc/*|/var|/var/*|/usr|/usr/*|/proc|/proc/*|/sys|/sys/*|/dev|/dev/*|/run|/run/*|/root|/root/*)
+      echo "ERROR: Refusing to mount protected host path: $host_real ($origin)" >&2
+      exit 2
+      ;;
+  esac
+
+  local protected
+  for protected in \
+    "$PROJECT_DIR" \
+    "$SCRIPT_DIR" \
+    "$CONFIG_DIR_REAL" \
+    "$STATE_DIR_REAL" \
+    "$HOME_REAL/.ssh" \
+    "$HOME_REAL/.gnupg" \
+    "$HOME_REAL/.aws" \
+    "$HOME_REAL/.azure" \
+    "$HOME_REAL/.kube" \
+    "$HOME_REAL/.docker" \
+    "${LAYERS[@]}"; do
+    if paths_overlap "$host_real" "$protected"; then
+      echo "ERROR: Refusing to mount host path overlapping '$protected': $host_real ($origin)" >&2
+      exit 2
+    fi
+  done
+
+  if [[ -z "$name" ]]; then
+    name=$(basename -- "$host_real")
+  fi
+
+  if [[ -z "$name" || "$name" == "." || "$name" == ".." ||
+        "$name" == */* || "$name" =~ [[:cntrl:]] ||
+        "$name" =~ ^[[:space:]] || "$name" =~ [[:space:]]$ ]]; then
+    echo "ERROR: Invalid mount target name '$name' in '$spec' ($origin)." >&2
+    exit 2
+  fi
+
+  if [[ -n "${SEEN_MOUNT_NAMES[$name]+set}" ]]; then
+    echo "ERROR: Duplicate extra mount name '$name' ($origin). Set a custom name with HOST:NAME." >&2
+    exit 2
+  fi
+  SEEN_MOUNT_NAMES[$name]=1
+
+  EXTRA_MOUNT_SRCS+=("$host_real")
+  EXTRA_MOUNT_NAMES+=("$name")
+  EXTRA_MOUNT_MODES+=("$mode")
+
+  # For writable extra directories, protect any .git metadata read-only.
+  if [[ "$mode" == "rw" && -d "$host_real" ]]; then
+    local rel repo
+    while IFS= read -r -d '' rel; do
+      repo=$(dirname -- "$rel")
+
+      if [[ $rel == *$'\n'* ]]; then
+        echo "ERROR: Path with newline cannot be mounted: $host_real/$rel ($origin)" >&2
+        exit 2
+      fi
+
+      if [[ -L "$host_real/$rel" ]]; then
+        echo "ERROR: .git must not be a symlink: $host_real/$rel ($origin)" >&2
+        exit 2
+      fi
+
+      if [[ -f "$host_real/$rel" ]]; then
+        if [[ $repo == "." ]]; then
+          echo "ERROR: Linked worktrees are not supported in writable extra mounts: $host_real ($origin)" >&2
+          exit 2
+        fi
+        continue
+      fi
+
+      EXTRA_RO_GIT_SRCS+=("$(repo_path "$host_real" "$repo")/.git")
+      EXTRA_RO_GIT_TARGETS+=("$(repo_path "/inputs/$name" "$repo")/.git")
+    done < <(
+      find "$host_real" \
+        \( -name node_modules -o -name vendor -o -name .venv \) -prune \
+        -o -name .git -printf '%P\0' -prune |
+        sort -z
+    )
+  fi
+}
+
+while IFS= read -r entry; do
+  add_extra_mount "$entry" "listed in $MOUNTS_FILE"
+done < <(list_lines "$MOUNTS_FILE")
+
+for entry in "${CLI_MOUNTS[@]}"; do
+  add_extra_mount "$entry" "from --mount"
+done
+
+# ------------------------------------------------------------
 # Secret files hidden from the agent
 # ------------------------------------------------------------
 # Untracked .env files are covered with a read-only /dev/null
@@ -309,31 +528,48 @@ yaml_path() {
   printf "'%s'" "${value//\'/\'\'}"
 }
 
-MASKED=()
+MASKED_TARGETS=()
+MASKED_DISPLAY=()
 
-while IFS= read -r -d '' rel; do
-  # Fail closed: such a path cannot be written as a mount target.
-  if [[ $rel == *$'\n'* ]]; then
-    echo "ERROR: File name with newline cannot be masked: $rel" >&2
-    exit 2
+collect_masked_env() {
+  local host_root=$1
+  local container_root=$2
+  local display_prefix=$3
+  local rel
+
+  while IFS= read -r -d '' rel; do
+    # Fail closed: such a path cannot be written as a mount target.
+    if [[ $rel == *$'\n'* ]]; then
+      echo "ERROR: File name with newline cannot be masked: $rel" >&2
+      exit 2
+    fi
+
+    # Tracked files are in Git history anyway. Git answers for the
+    # nearest repository around the file.
+    if git --literal-pathspecs -C "$(dirname -- "$host_root/$rel")" \
+         ls-files --error-unmatch -- "$(basename -- "$rel")" >/dev/null 2>&1; then
+      continue
+    fi
+
+    MASKED_TARGETS+=("$container_root/$rel")
+    MASKED_DISPLAY+=("${display_prefix}${rel}")
+  done < <(
+    find "$host_root" \
+      \( -name .git -o -name node_modules -o -name vendor -o -name .venv \) -prune \
+      -o -type f \( -name '.env*' -o -name '*.env' \) -printf '%P\0'
+  )
+}
+
+collect_masked_env "$PROJECT_DIR" "/workspace" ""
+
+for i in "${!EXTRA_MOUNT_SRCS[@]}"; do
+  if [[ -d "${EXTRA_MOUNT_SRCS[i]}" ]]; then
+    collect_masked_env "${EXTRA_MOUNT_SRCS[i]}" "/inputs/${EXTRA_MOUNT_NAMES[i]}" "/inputs/${EXTRA_MOUNT_NAMES[i]}/"
   fi
-
-  # Tracked files are in Git history anyway. Git answers for the
-  # nearest repository around the file.
-  if git --literal-pathspecs -C "$(dirname -- "$PROJECT_DIR/$rel")" \
-       ls-files --error-unmatch -- "$(basename -- "$rel")" >/dev/null 2>&1; then
-    continue
-  fi
-
-  MASKED+=("$rel")
-done < <(
-  find "$PROJECT_DIR" \
-    \( -name .git -o -name node_modules -o -name vendor -o -name .venv \) -prune \
-    -o -type f \( -name '.env*' -o -name '*.env' \) -printf '%P\0'
-)
+done
 
 # ------------------------------------------------------------
-# Generated mounts: read-only .git directories and masked files
+# Generated mounts: read-only .git directories, extra mounts and masked files
 # ------------------------------------------------------------
 MOUNT_FILE="$STATE_DIR/mounts-${REPO_HASH}.yaml"
 
@@ -349,10 +585,30 @@ MOUNT_FILE="$STATE_DIR/mounts-${REPO_HASH}.yaml"
     printf '          create_host_path: false\n'
   done
 
-  for rel in "${MASKED[@]}"; do
+  for i in "${!EXTRA_MOUNT_SRCS[@]}"; do
+    printf '      - type: bind\n'
+    printf '        source: %s\n' "$(yaml_path "${EXTRA_MOUNT_SRCS[i]}")"
+    printf '        target: %s\n' "$(yaml_path "/inputs/${EXTRA_MOUNT_NAMES[i]}")"
+    if [[ "${EXTRA_MOUNT_MODES[i]}" == "ro" ]]; then
+      printf '        read_only: true\n'
+    fi
+    printf '        bind:\n'
+    printf '          create_host_path: false\n'
+  done
+
+  for i in "${!EXTRA_RO_GIT_SRCS[@]}"; do
+    printf '      - type: bind\n'
+    printf '        source: %s\n' "$(yaml_path "${EXTRA_RO_GIT_SRCS[i]}")"
+    printf '        target: %s\n' "$(yaml_path "${EXTRA_RO_GIT_TARGETS[i]}")"
+    printf '        read_only: true\n'
+    printf '        bind:\n'
+    printf '          create_host_path: false\n'
+  done
+
+  for target in "${MASKED_TARGETS[@]}"; do
     printf '      - type: bind\n'
     printf '        source: /dev/null\n'
-    printf '        target: %s\n' "$(yaml_path "/workspace/$rel")"
+    printf '        target: %s\n' "$(yaml_path "$target")"
     printf '        read_only: true\n'
   done
 
@@ -492,9 +748,17 @@ fi
 # ------------------------------------------------------------
 # Start container
 # ------------------------------------------------------------
-if (( ${#MASKED[@]} )); then
+if (( ${#EXTRA_MOUNT_SRCS[@]} )); then
+  printf 'Extra mounts:\n'
+  for i in "${!EXTRA_MOUNT_SRCS[@]}"; do
+    printf '  /inputs/%s (%s) <- %s\n' \
+      "${EXTRA_MOUNT_NAMES[i]}" "${EXTRA_MOUNT_MODES[i]}" "${EXTRA_MOUNT_SRCS[i]}"
+  done
+fi
+
+if (( ${#MASKED_DISPLAY[@]} )); then
   printf 'Hidden from the agent:\n'
-  printf '  %s\n' "${MASKED[@]}"
+  printf '  %s\n' "${MASKED_DISPLAY[@]}"
 fi
 
 if (( GPU )); then
